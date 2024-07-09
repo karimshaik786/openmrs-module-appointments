@@ -37,7 +37,7 @@ jobs:
 
       - name: Delete existing release
         run: |
-          gh release delete v1.8.0.omod -y
+          gh release delete Release-v1.8.0.omod -y
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Create GitHub release

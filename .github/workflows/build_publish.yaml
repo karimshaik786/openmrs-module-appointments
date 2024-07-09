@@ -46,8 +46,9 @@ jobs:
             echo "No release found for $release_name to delete."
           fi
 
-          # Delete the tag locally and on the remote repository
-          git tag -d $tag_name
+          # Attempt to delete the tag on the remote repository
+          git push --delete origin $tag_name || echo "Tag $tag_name not found on remote."
+
       - name: Create GitHub release
         id: create_release
         uses: actions/create-release@v1

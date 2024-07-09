@@ -32,19 +32,23 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Get the release ID by tag name
-          release_id=$(curl -s -X GET -H "Authorization: token $GITHUB_TOKEN" "https://api.github.com/repos/${{ github.repository }}/releases/tags/v1.8.0.omod" | jq -r '.id')
+          release_name="Release-v1.8.0.omod"
+          tag_name="v1.8.0.omod"
+
+          # Fetch all releases and filter by release name to get the release ID
+          release_id=$(curl -s -X GET -H "Authorization: token $GITHUB_TOKEN" "https://api.github.com/repos/${{ github.repository }}/releases" | jq -r --arg release_name "$release_name" '.[] | select(.name == $release_name) | .id')
+
           if [ ! -z "$release_id" ] && [ "$release_id" != "null" ]; then
-            # Delete the release
+            # Delete the release using the release ID
             curl -s -X DELETE -H "Authorization: token $GITHUB_TOKEN" "https://api.github.com/repos/${{ github.repository }}/releases/$release_id"
-            echo "Deleted release v1.8.0.omod"
+            echo "Deleted release $release_name"
           else
-            echo "No release found for v1.8.0.omod to delete."
+            echo "No release found for $release_name to delete."
           fi
 
-          # Delete the tag
-          git push --delete origin v1.8.0.omod
-          git tag -d v1.8.0.omod
+          # Delete the tag locally and on the remote repository
+          git push --delete origin $tag_name
+          git tag -d $tag_name
       - name: Create GitHub release
         id: create_release
         uses: actions/create-release@v1

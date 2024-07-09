@@ -28,18 +28,23 @@ jobs:
       - name: Build and deploy with Maven
         run: ./mvnw --no-transfer-progress clean -U package -DskipTests
         
-      - name: Delete existing tag
-        run: |
-          git tag -d v1.8.0.omod || true
-          git push origin :refs/tags/v1.8.0.omod || true
+      - name: Delete Existing Release and Tag
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Get the release ID by tag name
+          release_id=$(curl -s -X GET -H "Authorization: token $GITHUB_TOKEN" "https://api.github.com/repos/${{ github.repository }}/releases/tags/v1.8.0.omod" | jq -r '.id')
+          if [ ! -z "$release_id" ] && [ "$release_id" != "null" ]; then
+            # Delete the release
+            curl -s -X DELETE -H "Authorization: token $GITHUB_TOKEN" "https://api.github.com/repos/${{ github.repository }}/releases/$release_id"
+            echo "Deleted release v1.8.0.omod"
+          else
+            echo "No release found for v1.8.0.omod to delete."
+          fi
 
-      - name: Delete existing release
-        run: |
-          gh release delete Release-v1.8.0.omod -y
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Delete the tag
+          git push --delete origin v1.8.0.omod
+          git tag -d v1.8.0.omod
       - name: Create GitHub release
         id: create_release
         uses: actions/create-release@v1
